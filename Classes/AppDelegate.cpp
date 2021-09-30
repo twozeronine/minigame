@@ -42,10 +42,19 @@ using namespace CocosDenshion;
 
 USING_NS_CC;
 
+typedef struct tagResource
+{
+    Size size;
+    char directory[100];
+}Resource;
+
 static cocos2d::Size designResolutionSize = cocos2d::Size(320, 480);
 static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
 static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
+
+static Resource smallResource = { Size(320,480),"iphone" };
+static Resource mediumResource = { Size(640,960),"iphone_retina" };
 
 AppDelegate::AppDelegate()
 {
@@ -89,6 +98,21 @@ bool AppDelegate::applicationDidFinishLaunching() {
 #endif
         director->setOpenGLView(glview);
     }
+    Size frameSize = glview->getFrameSize();
+
+    //frameSize가 smallResource보다 작거나 같으면 smallResource를 사용한다.
+    std::vector<std::string> resDirOrders;
+    if (frameSize.height <= smallResource.size.height) {
+        resDirOrders.push_back(smallResource.directory);
+        director->setContentScaleFactor(smallResource.size.height / designResolutionSize.height);
+    }
+    //frameSize가 smallResource보다 크면 mediumResource를 사용한다.
+    else {
+        resDirOrders.push_back(mediumResource.directory);
+        director->setContentScaleFactor(mediumResource.size.height / designResolutionSize.height);
+    }
+
+    FileUtils::getInstance()->setSearchResolutionsOrder(resDirOrders);
 
     // turn on display FPS
     director->setDisplayStats(true);
@@ -98,7 +122,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // Set the design resolution
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::SHOW_ALL);
-    auto frameSize = glview->getFrameSize();
     // if the frame's height is larger than the height of medium size.
     if (frameSize.height > mediumResolutionSize.height)
     {        
